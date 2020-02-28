@@ -61,7 +61,6 @@ if (TFstring == ""){
 } else
   subdir <- "TFMatrix/"
 
-
 files <- paste0(TFstring,"RedAdyCom",seq(ini_seq,end_seq),"_FILT")
 for (file_name in files)
 {
@@ -78,9 +77,6 @@ for (file_name in files)
     experiment<-1
   experiment_files <- Sys.glob(paste0("../results/",subdir,file_name,"_W_*.txt"))
   zero_matrix <- read_and_remove_zeroes(experiment_files[experiment])
-  # for (l in 1:nrow(zero_matrix))
-  #   for(m in 1:ncol(zero_matrix))
-  #     zero_matrix[l,m]<-0
   zero_matrix <- 0
 
   numexper <- 1
@@ -118,6 +114,7 @@ for (file_name in files)
   m_prob_emp <- paint_int_matrix(hm_emp_prob,titulo="log(P)\nEmpirical")
   m_prob_synth <- paint_int_matrix(hm_synth_prob,titulo="log(P)\nSynthetic")
   ppi <- 300  
+  dir.create("../figures/", showWarnings = FALSE)
   dir.create("../figures/matrixes", showWarnings = FALSE)
   fsal <- paste0("../figures/matrixes/STRENGTH_",file_name,"_nexper_",numexper,"_IntMatrix.png")
   png(fsal, width=10*ppi, height=4*ppi, res=ppi)
