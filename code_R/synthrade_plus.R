@@ -23,11 +23,29 @@ source("read_filter_condition.R")
 
 ReadMatrix <- function(year){
   original_file <- read.delim(paste0("../data/RedAdyCom",year,filtered_string,".txt"), header=FALSE)
-  or_matrix <- as.matrix(original_file)
+  or_matrix <- as.matrix(original_file)             # Empirical matrix
+  named_file <- read.csv(paste0("../data/RedAdyNames",year,".txt"))
+  sbycol <- colSums(named_file[,2:ncol(named_file)])
+  sbyrow <- rowSums(named_file[1:nrow(named_file),2:ncol(named_file)])
+  names(sbyrow) <- named_file$X
   # Clean rows and cols full of zeroes
   clean_matrix <- or_matrix[,colSums(or_matrix) > 0]
   clean_matrix <- clean_matrix[rowSums(clean_matrix) > 0,]
-  return(clean_matrix)
+  namesbyrow <- names(rev(sort(sbyrow[sbyrow>0])))  # Exporter names sort by trade volume descending
+  namesbycol <- names(rev(sort(sbycol[sbycol>0])))  # Importer names sort by trade volume ascending
+  regions_file <- read.csv("../data/countriesISO_regions.csv", sep=";")
+  regionsbyrow <- namesbyrow
+  regionsbycol <- namesbycol
+  for (i in 1:length(namesbyrow)){
+    print(namesbyrow[i])
+    regionsbyrow[i] = as.character(regions_file[regions_file$Country == namesbyrow[i],]$Region)
+  }
+  for (i in 1:length(namesbycol)){
+    print(namesbycol[i])
+    regionsbycol[i] = as.character(regions_file[regions_file$Country == namesbycol[i],]$Region)
+  }
+  return(list(clean_matrix,data.frame("Country"=namesbyrow,"Region" = regionsbyrow),
+                           data.frame("Country"=namesbycol,"Region" = regionsbycol)))
 }
 
 NodeAttachment <- function(vecprob,lvec)
@@ -56,7 +74,7 @@ UpdatableLinks <- function(matrixprob){
     return(positions)
 }
 
-SynthMatrix <- function(matrixemp, year, fbalance="None"){
+SynthMatrix <- function(matrixemp, year, fbalance="None", regionalinfo = FALSE){
   n_imp <- ncol(matrixemp)
   n_exp <- nrow(matrixemp)
   numlinks <- sum(matrixemp > 0)
@@ -108,6 +126,14 @@ SynthMatrix <- function(matrixemp, year, fbalance="None"){
     if ((!morenewnodes) && (tf == 0)){
       tf <- cuenta_links
       print(paste("Build up time",sim_step,"numlinks",tf,100*cuenta_links/numlinks))
+      # Sorting is required at this point if regional info is taken into account
+      # Nodes will be asigned at TF to the ordered sequence of countries of the empirical matrix
+      if (regionalinfo){
+        roword <- rev(order(rowSums(msynth)))  # Rows descending, first node is the main exporter at TF
+        colord <- rev(order(colSums(msynth)))  # Cols descending, first node in the main importer at TF
+        msynth <- msynth[roword,colord]
+        prob_new_links <- prob_new_links[roword,colord]
+      }
       if (append_log){
         con <- file("../results/symlog.txt", "a")
         cat(paste0("FT;",lyear,";",nexper,";",sim_step,";",cuenta_token,";",cuenta_links,";",numlinks,"\n"), file=con)
@@ -191,9 +217,11 @@ SynthMatrix <- function(matrixemp, year, fbalance="None"){
 
       # Funcion de peso
       if ((fbalance=="PRIME") && (!morenewnodes)){
-
-        primecut <- quantile(prob_new_links,c(cutoff))
-        prob_new_links <- prob_new_links*(1+prime*as.numeric(prob_new_links<=primecut[[1]]))
+        primecut <- quantile(prob_new_links,c(cutoff))   # Maximum trade to receive a trade boost
+        boostfactor <- prime*as.numeric(prob_new_links<=primecut[[1]])
+        if (regionalinfo)           # Boost only applies to intraregional trade
+          boostfactor <- boostfactor * regional_matrix
+        prob_new_links <- prob_new_links*(1+boostfactor)
         prob_new_links <- prob_new_links / sum(prob_new_links)
         
       }
@@ -241,24 +269,40 @@ if (length(args)==0){
 }
 
 ini_seq <- 2010
-end_seq <- 2017
-maxexper <- 5
+end_seq <- 2010
+maxexper <- 3
 cutoff <- 0.98                  # Fraction of probability without prime, 
 prime <- 1                      # Trade prime for those countries
 fbal <- "PRIME"
+regional <- TRUE
 namefilefbal <- paste0(fbal,"_",cutoff,"_",as.integer(100*prime))
 
 years <- seq(ini_seq,end_seq)
 
-for (lyear in years)
-  for (nexper in seq(1,maxexper)){
-    print(paste(lyear,"Experiment",nexper))
-    matrix_emp <- ReadMatrix(lyear)
-    nlinks <- sum(matrix_emp>0)
-    matrix_experiment <- SynthMatrix(matrix_emp,lyear,fbalance = fbal)
-    if (fbal!="NONE")
-      nfile <- paste0("../results/RedAdyCom",lyear,filtered_string,"_W_",nexper,"_FBAL_",namefilefbal,".txt")
-    else
-      nfile <- paste0("../results/RedAdyCom",lyear,filtered_string,"_W_",nexper,".txt")
-    write.table(matrix_experiment,nfile,row.names = FALSE, col.names = FALSE, sep = "\t")
+for (lyear in years){
+   infoMatrix <- ReadMatrix(lyear)
+   matrix_emp <- infoMatrix[[1]]
+   names_exp  <- infoMatrix[[2]]
+   names_imp <- infoMatrix[[3]]
+   # Matrix of regional adjacence. Order mimics the empirical distribution
+   if (regional){
+   regional_matrix <- matrix(0L, nrow = dim(matrix_emp)[1], ncol = dim(matrix_emp)[2])
+   for (i in 1:nrow(matrix_emp))
+     for (j in 1:ncol(matrix_emp))
+       if (names_exp$Region[i]==names_imp$Region[j])
+         regional_matrix[i,j]=1
+   }
+   nlinks <- sum(matrix_emp>0)
+   for (nexper in seq(1,maxexper)){
+      print(paste(lyear,"Experiment",nexper))
+      matrix_experiment <- SynthMatrix(matrix_emp,lyear,fbalance = fbal, regionalinfo = regional)
+      base_name <- paste0("../results/RedAdyCom",lyear,filtered_string,"_W_",nexper)
+      if (regional)
+        paste(base_name,"_REGIONAL")
+      if (fbal!="NONE")
+        nfile <- paste0(basename,"_FBAL_",namefilefbal,".txt")
+      else
+        nfile <- paste0(basename,".txt")
+      write.table(matrix_experiment,nfile,row.names = FALSE, col.names = FALSE, sep = "\t")
   }
+}

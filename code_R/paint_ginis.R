@@ -11,6 +11,8 @@ for (i in 1:nrow(Ginis)){
   if (grepl("EMPIRICAL",Method))
       Ginis$Method[i] <- "EMPIRICAL"
 }
+Ginis$Method <- as.factor(Ginis$Method)
+Ginis$Method <- ordered(Ginis$Method,levels=c("PRIME_0.98_150","PRIME_0.98_100","PRIME_0.98_50","SYNTH","EMPIRICAL"))
 boxplot(Gini_export ~ Method, data = Ginis)
 
 p10 <- ggplot(Ginis, aes(x = Year, y = Gini_import, fill = Method)) +
