@@ -268,11 +268,12 @@ if (length(args)==0){
   maxexper <- as.numeric(args[3]) 
 }
 
-ini_seq <- 2010
-end_seq <- 2010
-maxexper <- 3
-cutoff <- 0.98                  # Fraction of probability without prime, 
-prime <- 1                      # Trade prime for those countries
+ini_seq <- 2017
+end_seq <- 2017
+maxexper <- 10
+
+cutoff <- 0.97                  # Fraction of probability without prime, 
+prime <- 1.5                    # Trade prime for those countries
 fbal <- "PRIME"
 regional <- TRUE
 namefilefbal <- paste0(fbal,"_",cutoff,"_",as.integer(100*prime))
@@ -297,10 +298,12 @@ for (lyear in years){
       print(paste(lyear,"Experiment",nexper))
       matrix_experiment <- SynthMatrix(matrix_emp,lyear,fbalance = fbal, regionalinfo = regional)
       base_name <- paste0("../results/RedAdyCom",lyear,filtered_string,"_W_",nexper)
-      if (regional)
-        paste(base_name,"_REGIONAL")
+      if (regional){
+        rsuf <- "_REGIONAL"
+      } else 
+        rsuf <- ""
       if (fbal!="NONE")
-        nfile <- paste0(basename,"_FBAL_",namefilefbal,".txt")
+        nfile <- paste0(base_name,"_FBAL_",namefilefbal,rsuf,".txt")
       else
         nfile <- paste0(basename,".txt")
       write.table(matrix_experiment,nfile,row.names = FALSE, col.names = FALSE, sep = "\t")
