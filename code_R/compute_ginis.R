@@ -1,6 +1,5 @@
 # Performs the Lilliefors normality test and computes the Kolmogorov-Smirnov distance between the
-# strength filtered empirical network and the synthetic network. Results are stored at results/BestKS.txt and
-# results/BestLillies.txt
+# strength filtered empirical network and the synthetic network. 
 #
 # Computes the Gini coefficients and store them in results/Ginis.txt
 #
@@ -60,6 +59,14 @@ for (year in anyos){
                                                 "Gini_import" = Gini_imp))
     }
     # Original Matrix
+    hm_unfilt_exp <- hm_unfilt[hm_unfilt$type == "EXP",]$cuenta
+    hm_unfilt_imp <- hm_unfilt[hm_unfilt$type == "IMP",]$cuenta
+    Gini_imp <- ineq(hm_unfilt_imp)
+    Gini_exp <- ineq(hm_unfilt_exp)
+    dfginis <- rbind(dfginis,data.frame("File"=paste0("RedAdyCom",year,filtered_string,"_W_RAW"),
+                                        "Gini_export" = Gini_exp,
+                                        "Gini_import" = Gini_imp))
+    # Filtered Matrix
     hm_filt_exp <- hm_filt[hm_filt$type == "EXP",]$cuenta
     hm_filt_imp <- hm_filt[hm_filt$type == "IMP",]$cuenta
     Gini_imp <- ineq(hm_filt_imp)

@@ -8,6 +8,11 @@
 #                    finseq : Final year
 #                    numexper: Number of experiments
 #                    fbal: function to balance trade
+#                    cutoff: percentage of trade NOT improved
+#                    boost : trade boost
+#                    scope : REGIONAL or global
+#
+# Invocation example: Rscript synthrade_plus.R 2011 2011 10 BOOST 97 100 REGIONAL
 #
 # Filtering conditions at filtered_condition.txt file
 #            First number: 1 (Use filtered file)/ 0 (use raw file)
@@ -37,11 +42,11 @@ ReadMatrix <- function(year){
   regionsbyrow <- namesbyrow
   regionsbycol <- namesbycol
   for (i in 1:length(namesbyrow)){
-    print(namesbyrow[i])
+    #print(namesbyrow[i])
     regionsbyrow[i] = as.character(regions_file[regions_file$Country == namesbyrow[i],]$Region)
   }
   for (i in 1:length(namesbycol)){
-    print(namesbycol[i])
+    #print(namesbycol[i])
     regionsbycol[i] = as.character(regions_file[regions_file$Country == namesbycol[i],]$Region)
   }
   return(list(clean_matrix,data.frame("Country"=namesbyrow,"Region" = regionsbyrow),
@@ -216,9 +221,9 @@ SynthMatrix <- function(matrixemp, year, fbalance="None", regionalinfo = FALSE){
     else if (cuenta_links > min_links) {
 
       # Funcion de peso
-      if ((fbalance=="PRIME") && (!morenewnodes)){
-        primecut <- quantile(prob_new_links,c(cutoff))   # Maximum trade to receive a trade boost
-        boostfactor <- prime*as.numeric(prob_new_links<=primecut[[1]])
+      if ((fbalance=="BOOST") && (!morenewnodes)){
+        boostcut <- quantile(prob_new_links,c(cutoff))   # Maximum trade to receive a trade boost
+        boostfactor <- boost*as.numeric(prob_new_links<=boostcut[[1]])
         if (regionalinfo)           # Boost only applies to intraregional trade
           boostfactor <- boostfactor * regional_matrix
         prob_new_links <- prob_new_links*(1+boostfactor)
@@ -266,17 +271,23 @@ if (length(args)==0){
   ini_seq <- as.numeric(args[1])
   end_seq <- as.numeric(args[2])
   maxexper <- as.numeric(args[3]) 
+  fbal <- args[4]
+  if (length(fbal) > 0)
+  cutoff <- as.numeric(args[5])/100                   # Fraction of probability without boost, 
+  boost <- as.numeric(args[6])/100                    # Trade boost for those countries
+  if (args[7] == "REGIONAL")
+  regional <- TRUE
 }
 
-ini_seq <- 2017
-end_seq <- 2017
-maxexper <- 10
-
-cutoff <- 0.97                  # Fraction of probability without prime, 
-prime <- 1.5                    # Trade prime for those countries
-fbal <- "PRIME"
-regional <- TRUE
-namefilefbal <- paste0(fbal,"_",cutoff,"_",as.integer(100*prime))
+# ini_seq <- 2017
+# end_seq <- 2017
+# maxexper <- 10
+# 
+# cutoff <- 0.97                  # Fraction of probability without boost, 
+# boost <- 0.5                    # Trade boost for those countries
+# fbal <- "BOOST"
+# regional <- TRUE
+namefilefbal <- paste0(fbal,"_",cutoff,"_",as.integer(100*boost))
 
 years <- seq(ini_seq,end_seq)
 

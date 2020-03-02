@@ -19,6 +19,9 @@ MPack <- function(matrix,normalize = TRUE)
 
 source("parse_command_line_args.R")
 
+ini_seq <- 2017
+end_seq <- 2017
+
 NREPS <- 100
 files <- paste0("RedAdyCom",seq(ini_seq,end_seq))
 for (orig_file in files)
