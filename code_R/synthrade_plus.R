@@ -24,7 +24,7 @@
 
 source("parse_command_line_args.R")
 source("read_filter_condition.R")
-
+library(stringr)
 
 ReadMatrix <- function(year){
   original_file <- read.delim(paste0("../data/RedAdyCom",year,filtered_string,".txt"), header=FALSE)
@@ -272,16 +272,17 @@ if (length(args)==0){
   end_seq <- as.numeric(args[2])
   maxexper <- as.numeric(args[3]) 
   fbal <- args[4]
-  if (length(fbal) > 0)
+  if (str_length(fbal) > 0)
   cutoff <- as.numeric(args[5])/100                   # Fraction of probability without boost, 
   boost <- as.numeric(args[6])/100                    # Trade boost for those countries
-  print(paste("length(args[7])",length(args[7])))
-  if (length(args[7]) <= 1){
+  print(paste("length(args[7])",str_length(args[7]),is.na(str_length(args[7]))))
+  if (is.na(str_length(args[7]))){
     regional <- FALSE
   } else{ 
       if (args[7] == "REGIONAL")
       regional <- TRUE
   }
+  paste(paste("regional",regional))
 }
 
 # ini_seq <- 2017
