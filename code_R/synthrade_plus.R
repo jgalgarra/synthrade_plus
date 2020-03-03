@@ -275,8 +275,13 @@ if (length(args)==0){
   if (length(fbal) > 0)
   cutoff <- as.numeric(args[5])/100                   # Fraction of probability without boost, 
   boost <- as.numeric(args[6])/100                    # Trade boost for those countries
-  if (args[7] == "REGIONAL")
-  regional <- TRUE
+  print(paste("length(args[7])",length(args[7])))
+  if (length(args[7]) <= 1){
+    regional <- FALSE
+  } else{ 
+      if (args[7] == "REGIONAL")
+      regional <- TRUE
+  }
 }
 
 # ini_seq <- 2017

@@ -56,11 +56,11 @@ p10 <- ggplot(Ginis, aes(x = Year, y = Gini_import, fill = Method)) +
 
 Ginis_Sel <- Ginis[(Ginis$MethodLabel=="BOOST")&(Ginis$ImprovedFraction==2) | (Ginis$MethodLabel=="SYNTH") ,]
 p11 <- ggplot(Ginis_Sel, aes(x = as.numeric(TradeBoost), y = Gini_import, color = Scope)) +
-  geom_point(alpha=0.6) +
-  ylim(c(0.5,1))#+
+  geom_point(alpha=0.8) + geom_jitter(width=1.5) +
+  ylim(c(0.5,1))+ xlab("Boost percentage")+
   # ggtitle("Gini index by year") +
-  # theme_bw() +
-  # theme(plot.title = element_text(size = 14,  face = "bold"),
-  #       text = element_text(size = 12),
-  #       axis.title = element_text(face="bold"),
-  #       axis.text.x=element_text(size = 11)) 
+  theme_bw() +
+  theme(plot.title = element_text(size = 14,  face = "bold"),
+         text = element_text(size = 12),
+         axis.title = element_text(face="bold"),
+         axis.text.x=element_text(size = 11)) 
