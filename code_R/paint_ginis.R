@@ -7,11 +7,14 @@ Ginis$Method <- "SYNTH"
 Ginis$MethodLabel <- "SYNTH"
 Ginis$Scope <- "GLOBAL"
 Ginis$TradeBoost <- 0
+Ginis$Experiment <- 0
 Ginis$ImprovedFraction <- 0.0
 for (i in 1:nrow(Ginis)){
   texto <- strsplit(strsplit(as.character(Ginis[i,]$File),"RedAdyCom")[[1]][2],"_FILT")
   Ginis$Year[i] <- texto[[1]][1]
   Method <- strsplit(texto[[1]][2],"_W")[[1]][2]
+  Experiment <- strsplit(gsub(".txt","_",texto[[1]][2]),"_")[[1]][3]
+  Ginis$Experiment[i] <- Experiment
   if (grepl("FBAL",Method)){
     if (grepl("BOOST",Method)){
       Ginis$MethodLabel[i] = "BOOST"
@@ -31,17 +34,7 @@ for (i in 1:nrow(Ginis)){
   
 }
 Ginis$Method <- as.factor(Ginis$Method)
-# Ginis$Method <- ordered(Ginis$Method,levels=c("BOOST_0.98_150",
-#                                               "BOOST_0.98_100",
-#                                               "BOOST_0.98_50",
-#                                               "BOOST_0.98_150_REGIONAL",
-#                                               "BOOST_0.98_100_REGIONAL",
-#                                               "BOOST_0.98_50_REGIONAL",
-#                                               "BOOST_0.97_150_REGIONAL",
-#                                               "BOOST_0.97_100_REGIONAL",
-#                                               "BOOST_0.97_50_REGIONAL",
-#                                               "SYNTH",
-#                                               "EMPIRICAL"))
+
 boxplot(Gini_export ~ Method, data = Ginis)
 
 
@@ -56,6 +49,8 @@ p10 <- ggplot(Ginis, aes(x = Year, y = Gini_import, fill = Method)) +
         axis.text.x=element_text(size = 11)) +
   scale_fill_brewer(palette = "Accent")
 
+
+
 Ginis_Sel <- Ginis[(Ginis$MethodLabel=="BOOST") | (Ginis$MethodLabel=="SYNTH") ,]
 
 
@@ -67,10 +62,11 @@ mean_add <- mean_vals[mean_vals$TradeBoost==0,]
 mean_add$Scope = "REGIONAL"
 mean_vals <- rbind(mean_vals,mean_add)
 
+Ginis_Sel$YF <- paste(Ginis_Sel$Year,Ginis_Sel$ImprovedFraction)
 p11 <- ggplot(Ginis_Sel, aes(x = as.numeric(TradeBoost), y = Gini_import, fill = Scope)) +
   geom_jitter(alpha=0.5,shape=21,size=3,color="transparent",width=1) +
   geom_line(data=mean_vals,aes(x = as.numeric(TradeBoost), y = Gini_import, color= Scope),size=1,alpha=0.7)+
-  ylim(c(0.5,1))+ xlab("Boost percentage")+
+  ylim(c(0.5,1))+ xlab("Boost percentage")+facet_wrap(~YF)+
   # ggtitle("Gini index by year") +
   theme_bw() +
   theme(plot.title = element_text(size = 14,  face = "bold"),
@@ -104,16 +100,17 @@ for (k in unique(mean_vals_year$Year))
   }
 }
 mean_vals_year <- mean_vals_year[mean_vals_year$ImprovedFraction!=0,]
-mean_vals_year$Policy <- paste(mean_vals_year$Scope,mean_vals_year$ImprovedFraction)
+mean_vals_year$Policy <- paste0(mean_vals_year$Scope," ",mean_vals_year$ImprovedFraction,"%")
 
-
-paint_ginis_year <- function(datos,year)
+paint_ginis_year <- function(datos)#,year)
 {
-  ginis_year <- datos[datos$Year == year,]
+  #ginis_year <- datos[datos$Year == year,]
+  ginis_year <- datos
   pres <- ggplot(ginis_year, aes(x = as.numeric(TradeBoost), y = Gini_import, 
                                          color = Policy)) +
-    geom_line(size=0.7,alpha=0.7)+
-    ylim(c(0.5,1))+ xlab("Boost percentage") + ggtitle(year) +
+    geom_line(size=0.7,alpha=0.7)+geom_point(size=2,alpha=0.7)+
+    ylim(c(0.5,1))+ xlab("Boost percentage") + 
+    facet_wrap(~Year,scales="free_x")+
     theme_bw() +
     theme(plot.title = element_text(size = 14,  face = "bold"),
           legend.position = "bottom",
@@ -124,18 +121,40 @@ paint_ginis_year <- function(datos,year)
   
 }
 
-p12_2011 <- paint_ginis_year(mean_vals_year,2011)
-p12_2017 <- paint_ginis_year(mean_vals_year,2017)
+
+write.table(Ginis,"../results/ginis_detail.txt",sep=";",row.names = FALSE)
+write.table(mean_vals_year,"../results/ginis_means.txt",sep=";",row.names = FALSE)
 
 
-grid.arrange(p12_2011, p12_2017,ncol=2,nrow=1)
+p12 <- paint_ginis_year(mean_vals_year)#,2011)
 
-# p13 <- ggplot(Ginis_Sel, aes(x = as.factor(TradeBoost), y = Gini_import, color = Scope)) +
-#   geom_boxplot(alpha=0.8) + #geom_jitter(width=1.5) +
-#   ylim(c(0.5,1))+ xlab("Boost percentage")+
-#   # ggtitle("Gini index by year") +
-#   theme_bw() +
-#   theme(plot.title = element_text(size = 14,  face = "bold"),
-#         text = element_text(size = 12),
-#         axis.title = element_text(face="bold"),
-#         axis.text.x=element_text(size = 11)) 
+ppi <- 300
+fsal <- paste0("../figures/Ginis_evol.png")
+png(fsal, width=10*ppi, height=6*ppi, res=ppi)
+print(p12)
+dev.off()
+
+ppi <- 300
+fsal <- paste0("../figures/Ginis_dispersion.png")
+png(fsal, width=10*ppi, height=6*ppi, res=ppi)
+print(p11)
+dev.off()
+
+
+
+ppi <- 300
+Ginis_Box <- Ginis_Sel[Ginis_Sel$ImprovedFraction>0,]
+Ginis_Box$ImprovedFraction <- paste("Improved Fraction",Ginis_Box$ImprovedFraction,"%")
+p13 <- ggplot(Ginis_Box, aes(x = as.factor(TradeBoost), y = Gini_import, color = Scope)) +
+   geom_boxplot(alpha=0.8) + #geom_jitter(width=1.5) +
+   ylim(c(0.5,1))+ xlab("Boost percentage")+facet_wrap(~ImprovedFraction)+
+   # ggtitle("Gini index by year") +
+   theme_bw() +
+   theme(plot.title = element_text(size = 14,  face = "bold"),
+         text = element_text(size = 12),
+         axis.title = element_text(face="bold"),
+         axis.text.x=element_text(size = 11)) 
+fsal <- paste0("../figures/Ginis_BoxPlots.png")
+png(fsal, width=10*ppi, height=4*ppi, res=ppi)
+print(p13)
+dev.off()

@@ -160,6 +160,9 @@ PaintBoxPlot <- function(datos,titletext,xlabel)
 
 source("parse_command_line_args.R")
 
+ini_seq<-2011
+end_seq <- 2011
+
 anyos <- seq(ini_seq,end_seq)
 
 if (sbestKS)
