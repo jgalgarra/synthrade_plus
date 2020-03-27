@@ -20,10 +20,10 @@ if (nchar(filtered_string)>1) {
 source("parse_command_line_args.R")
 
 
-   ini_seq = 2005
-   end_seq = 2005
+   ini_seq = 2011
+   end_seq = 2017
 
-anyos <- c(ini_seq,end_seq)
+anyos <- seq(ini_seq,end_seq)
 
 dfginis <- data.frame("File"=c(),"Experiment"=c(),"Gini_import"=c(),"Gini_export"=c())
 
@@ -35,59 +35,87 @@ for (year in anyos){
                                 header=FALSE, sep=";")
   names(importers_regions) <- c("Country","Region")
   regions <- unique(c(as.character(importers_regions$Region),"WORLD"))
-  for (reg in regions)
-  {
-    unfilt_name <- paste0("RedAdyCom",year)
-    file_name <- paste0("RedAdyCom",year,filtered_string)
-    file_orig <- paste0("RedAdyCom",year)
-    experiment_files <- Sys.glob(paste0("../results/",file_name,"_W_*.txt"))
-    if (length(experiment_files)>0){
-      filt_matrix <- read_and_remove_zeroes(paste0("../data/",file_name,".txt"))
-      unfilt_matrix <- read_and_remove_zeroes(paste0("../data/",unfilt_name,".txt"))
-      orig_matrix <- read_and_remove_zeroes(paste0("../data/",file_orig,".txt"))
-      sim_matrix <- read_and_remove_zeroes(experiment_files[1])
-      hm_unfilt <- crea_lista_heatmap(MPack(unfilt_matrix,normalize = TRUE))
-      hm_filt <- crea_lista_heatmap(MPack(filt_matrix,normalize = TRUE))
-      hm_filt <- hm_filt[hm_filt$cuenta>0,]
-      hm_sim <- crea_lista_heatmap(MPack(sim_matrix,normalize = TRUE))
-      for (i in seq(1,length(experiment_files))){
-        print(experiment_files[i])
-        other_sim_matrix <- read_and_remove_zeroes(experiment_files[i])
-        other_hm_sim <- crea_lista_heatmap(MPack(other_sim_matrix,normalize = TRUE))
-        hm_sim_exp <- other_hm_sim[other_hm_sim$type == "EXP",]$cuenta
-        hm_sim_imp <- other_hm_sim[other_hm_sim$type == "IMP",]$cuenta
-        hm_filt_exp <- hm_filt[hm_filt$type == "EXP",]$cuenta
-        hm_filt_imp <- hm_filt[hm_filt$type == "IMP",]$cuenta
-        
+  regions <- regions[regions != "ATA"]  # Remove Antarctica
+
+  unfilt_name <- paste0("RedAdyCom",year)
+  file_name <- paste0("RedAdyCom",year,filtered_string)
+  file_orig <- paste0("RedAdyCom",year)
+  experiment_files <- Sys.glob(paste0("../results/",file_name,"_W_*.txt"))
+  if (length(experiment_files)>0){
+    filt_matrix <- read_and_remove_zeroes(paste0("../data/",file_name,".txt"))
+    unfilt_matrix <- read_and_remove_zeroes(paste0("../data/",unfilt_name,".txt"))
+    orig_matrix <- read_and_remove_zeroes(paste0("../data/",file_orig,".txt"))
+    sim_matrix <- read_and_remove_zeroes(experiment_files[1])
+    hm_unfilt <- crea_lista_heatmap(MPack(unfilt_matrix,normalize = TRUE))
+    hm_filt <- crea_lista_heatmap(MPack(filt_matrix,normalize = TRUE))
+    hm_filt <- hm_filt[hm_filt$cuenta>0,]
+    hm_sim <- crea_lista_heatmap(MPack(sim_matrix,normalize = TRUE))
+    for (i in seq(1,length(experiment_files))){
+      print(experiment_files[i])
+      other_sim_matrix <- read_and_remove_zeroes(experiment_files[i])
+      other_hm_sim <- crea_lista_heatmap(MPack(other_sim_matrix,normalize = TRUE))
+      hm_sim_exp <- other_hm_sim[other_hm_sim$type == "EXP",]$cuenta
+      hm_sim_imp <- other_hm_sim[other_hm_sim$type == "IMP",]$cuenta
+      hm_filt_exp <- hm_filt[hm_filt$type == "EXP",]$cuenta
+      hm_filt_imp <- hm_filt[hm_filt$type == "IMP",]$cuenta
+
+      for (reg in regions)
+      {
 
         # Global Gini
-        Gini_imp <- ineq(hm_sim_imp)
-        Gini_exp <- ineq(hm_sim_exp)
+        if (reg == "WORLD"){
+          Gini_imp <- ineq(hm_sim_imp)
+          Gini_exp <- ineq(hm_sim_exp)
+        } else {
+          Gini_imp <- ineq(hm_sim_imp[importers_regions$Region==reg])
+          Gini_exp <- ineq(hm_sim_exp[exporters_regions$Region==reg])
+        }
         dfginis <- rbind(dfginis,data.frame("File"=experiment_files[i],
                                                   "Gini_export" = Gini_exp,
                                                   "Gini_import" = Gini_imp,
-                                                  "Region" = "WORLD"))
+                                                  "Region" = reg))
       }
-      # Original Matrix
-      hm_unfilt_exp <- hm_unfilt[hm_unfilt$type == "EXP",]$cuenta
-      hm_unfilt_imp <- hm_unfilt[hm_unfilt$type == "IMP",]$cuenta
-      Gini_imp <- ineq(hm_unfilt_imp)
-      Gini_exp <- ineq(hm_unfilt_exp)
-      dfginis <- rbind(dfginis,data.frame("File"=paste0("RedAdyCom",year,filtered_string,"_W_RAW"),
-                                          "Gini_export" = Gini_exp,
-                                          "Gini_import" = Gini_imp,
-                                          "Region" = "WORLD"))
-      # Filtered Matrix
-      hm_filt_exp <- hm_filt[hm_filt$type == "EXP",]$cuenta
-      hm_filt_imp <- hm_filt[hm_filt$type == "IMP",]$cuenta
-      Gini_imp <- ineq(hm_filt_imp)
-      Gini_exp <- ineq(hm_filt_exp)
-      dfginis <- rbind(dfginis,data.frame("File"=paste0("RedAdyCom",year,filtered_string,"_W_EMPIRICAL"),
-                                          "Gini_export" = Gini_exp,
-                                          "Gini_import" = Gini_imp,
-                                          "Region" = "WORLD"))
     }
-    write.table(dfginis,"../results/GinisRegions.txt",sep="\t",row.names = FALSE)
-  }
 
+    # Filtered Matrix
+    hm_filt_exp <- hm_filt[hm_filt$type == "EXP",]$cuenta
+    hm_filt_imp <- hm_filt[hm_filt$type == "IMP",]$cuenta
+    
+    for (reg in regions)
+    {
+      # Global Gini
+      if (reg == "WORLD"){
+        Gini_imp <- ineq(hm_filt_imp)
+        Gini_exp <- ineq(hm_filt_exp)
+      } else {
+        Gini_imp <- ineq(hm_filt_imp[importers_regions$Region==reg])
+        Gini_exp <- ineq(hm_filt_exp[exporters_regions$Region==reg])
+      }
+      dfginis <- rbind(dfginis,data.frame("File"= paste0("RedAdyCom",year,filtered_string,"_W_EMPIRICAL"),
+                                          "Gini_export" = Gini_exp,
+                                          "Gini_import" = Gini_imp,
+                                          "Region" = reg))
+    }
+    
+    Gini_imp <- ineq(hm_filt_imp)
+    Gini_exp <- ineq(hm_filt_exp)
+    dfginis <- rbind(dfginis,data.frame("File"=paste0("RedAdyCom",year,filtered_string,"_W_EMPIRICAL"),
+                                        "Gini_export" = Gini_exp,
+                                        "Gini_import" = Gini_imp,
+                                        "Region" = "WORLD"))
+    
+    
+    # Original Matrix
+    hm_unfilt_exp <- hm_unfilt[hm_unfilt$type == "EXP",]$cuenta
+    hm_unfilt_imp <- hm_unfilt[hm_unfilt$type == "IMP",]$cuenta
+    Gini_imp <- ineq(hm_unfilt_imp)
+    Gini_exp <- ineq(hm_unfilt_exp)
+    dfginis <- rbind(dfginis,data.frame("File"=paste0("RedAdyCom",year,filtered_string,"_W_RAW"),
+                                        "Gini_export" = Gini_exp,
+                                        "Gini_import" = Gini_imp,
+                                        "Region" = "WORLD"))
+
+
+  }
+  write.table(dfginis,"../results/GinisRegions.txt",sep="\t",row.names = FALSE)
 }
