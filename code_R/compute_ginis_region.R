@@ -20,7 +20,7 @@ if (nchar(filtered_string)>1) {
 source("parse_command_line_args.R")
 
 
-   ini_seq = 2011
+   ini_seq = 2005
    end_seq = 2017
 
 anyos <- seq(ini_seq,end_seq)

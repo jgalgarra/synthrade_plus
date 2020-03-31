@@ -20,7 +20,7 @@ exit <- function() {
 
 year1 = 2011
 year2 = 2011
-region_filter = "WORLD"
+region_filter = "ALL"
 
 paint_ginis_year <- function(datos)
 {
@@ -91,6 +91,24 @@ p10 <- ggplot(Ginis, aes(x = Year, y = Gini_import, fill = Method)) +
   scale_fill_brewer(palette = "Accent")
 
 Ginis_Sel <- Ginis[(Ginis$MethodLabel=="BOOST") | (Ginis$MethodLabel=="SYNTH") ,]
+
+if (region_filter!="ALL"){
+  Ginis_Mean <- Ginis_Sel[Ginis_Sel$Region == lRegion,]
+} else
+  Ginis_Mean <- Ginis_Sel[Ginis_Sel$Region == "WORLD",]
+
+mean_vals=aggregate(Ginis_Mean$Gini_import , by=list(Ginis_Mean$TradeBoost,Ginis_Mean$Scope), mean)
+names(mean_vals)= c("TradeBoost","Scope","Gini_import")
+# Add a phantom record with the same TradeBoost 0 value of the unimproved network, with "REGIONAL"
+# scope, so that the trend lines start at TradeBoost == 0
+mean_add <- mean_vals[mean_vals$TradeBoost==0,]
+mean_add$Scope = "REGIONAL"
+mean_vals <- rbind(mean_vals,mean_add)
+
+imprfrac = 2
+Ginis_Sel$YF <- paste(Ginis_Sel$Year,Ginis_Sel$ImprovedFraction)
+Ginis_Regions <- Ginis_Sel # Data frame with all regional data
+
 if (region_filter %in% c("ALL","WORLD"))  {
   Ginis_Sel <- Ginis_Sel[Ginis_Sel$Region == "WORLD",]
   lRegion = "WORLD"
@@ -99,27 +117,32 @@ if (region_filter %in% c("ALL","WORLD"))  {
   lRegion = region_filter 
 }
 
-mean_vals=aggregate(Ginis_Sel$Gini_import , by=list(Ginis_Sel$TradeBoost,Ginis_Sel$Scope) , mean)
-names(mean_vals)= c("TradeBoost","Scope","Gini_import")
-# Add a phantom record with the same TradeBoost 0 value of the unimproved network, with "REGIONAL"
-# scope, so that the trend lines start at TradeBoost == 0
-mean_add <- mean_vals[mean_vals$TradeBoost==0,]
-mean_add$Scope = "REGIONAL"
-mean_vals <- rbind(mean_vals,mean_add)
-
-Ginis_Sel$YF <- paste(Ginis_Sel$Year,Ginis_Sel$ImprovedFraction)
-# Scatter plot, only for selected region values
-p11 <- ggplot(Ginis_Sel, aes(x = as.numeric(TradeBoost), y = Gini_import, fill = Scope)) +
+# Selection of improved fraction
+Ginis_Disp = Ginis_Sel[(Ginis_Sel$ImprovedFraction == imprfrac) |(Ginis_Sel$ImprovedFraction == 0) ,]
+# Scatter plot, only for selected region values, only year1
+p11 <- ggplot(Ginis_Disp, aes(x = as.numeric(TradeBoost), y = Gini_import, fill = Scope)) +
   geom_jitter(alpha=0.3,shape=21,size=2,color="transparent",width=1) +
   geom_line(data=mean_vals,aes(x = as.numeric(TradeBoost), y = Gini_import, color= Scope),size=1,alpha=0.7)+
-  ylim(c(0.5,1))+ xlab("Boost percentage")+#facet_wrap(~YF)+
-  # ggtitle("Gini index by year") +
+  ylim(c(0.5,1))+ xlab("Boost percentage")+ylab("Importers Gini")+#facet_wrap(~YF)+
+  ggtitle(paste0(year1," improved fraction ",imprfrac,"%")) +
   theme_bw() +
-  theme(plot.title = element_text(size = 14,  face = "bold"),
+  theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
         text = element_text(size = 12),
         axis.title = element_text(face="bold"),
         axis.text.x=element_text(size = 11)) 
 
+Ginis_DispR = Ginis_Regions[(Ginis_Regions$ImprovedFraction == imprfrac) |(Ginis_Regions
+                                                                           $ImprovedFraction == 0) ,]
+# Boxplots, only for all regions, only year1
+pregions <- ggplot(Ginis_DispR, aes(x = as.factor(TradeBoost), y = Gini_import, 
+                                    color = Scope)) +
+  geom_boxplot(alpha=0.7) + ggtitle(paste0(year1," improved fraction ",imprfrac,"%")) +
+  ylim(c(0.2,1))+ xlab("Boost percentage")+ylab("Importers Gini")+facet_wrap(~Region)+
+  theme_bw() +
+  theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
+        text = element_text(size = 12),
+        axis.title = element_text(face="bold"),
+        axis.text.x=element_text(size = 11)) 
 
 mean_vals_year=aggregate(Ginis_Sel$Gini_import , 
                          by=list(Ginis_Sel$Year,Ginis_Sel$TradeBoost,
@@ -162,7 +185,7 @@ p13 <- ggplot(Ginis_Box, aes(x = as.factor(TradeBoost), y = Gini_import, color =
   ylim(c(0.5,1))+ xlab("Boost percentage")+facet_wrap(~ImprovedFraction)+
   labs(title=paste(year1,lRegion))+
   theme_bw() +
-  theme(plot.title = element_text(size = 14,  face = "bold"),
+  theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
         text = element_text(size = 12),
         axis.title = element_text(face="bold"),
         axis.text.x=element_text(size = 11)) 
@@ -175,10 +198,17 @@ print(p12)
 dev.off()
 
 ppi <- 300
-fsal <- paste0("../figures/Ginis_dispersion_regions_",year1,"_",year2,"_",lRegion,".png")
+fsal <- paste0("../figures/Ginis_dispersion_WORLD_",year1,"_",year2,"_",lRegion,".png")
 png(fsal, width=10*ppi, height=6*ppi, res=ppi)
 print(p11)
 dev.off()
+
+ppi <- 300
+fsal <- paste0("../figures/Ginis_BOX_WBREGIONS_regions_",year1,"_",year2,"_",lRegion,".png")
+png(fsal, width=10*ppi, height=6*ppi, res=ppi)
+print(pregions)
+dev.off()
+
 
 ppi <- 300
 fsal <- paste0("../figures/Ginis_BoxPlots_regions_",year1,"_",year2,"_",lRegion,".png")

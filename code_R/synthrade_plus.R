@@ -7,7 +7,7 @@
 #                    iniseq : Initial year
 #                    finseq : Final year
 #                    numexper: Number of experiments
-#                    fbal: function to balance trade
+#                    fbal: function to balance trade (if NONE there is no balance)
 #                    cutoff: percentage of trade NOT improved
 #                    boost : trade boost
 #                    scope : REGIONAL or global
@@ -322,7 +322,7 @@ for (lyear in years){
     if (fbal!="NONE")
       nfile <- paste0(base_name,"_FBAL_",namefilefbal,rsuf,".txt")
     else
-      nfile <- paste0(basename,".txt")
+      nfile <- paste0(base_name,".txt")
     write.table(matrix_experiment,nfile,row.names = FALSE, col.names = FALSE, sep = "\t")
   }
 }
