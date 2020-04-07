@@ -1,11 +1,8 @@
-# Performs the Lilliefors normality test and computes the Kolmogorov-Smirnov distance between the
-# strength filtered empirical network and the synthetic network. 
-#
-# Computes the Gini coefficients and store them in results/Ginis.txt
+# Computes the Gini coefficients and store them in results/GinisRegions.txt
 #
 # Author: Javier Garcia Algarra
 #
-# Invocation: Rscript compute_gof_distrbutions iniseq finseq 
+# Invocation: Rscript GinisRegions iniseq finseq 
 
 library(nortest)
 library(ineq)

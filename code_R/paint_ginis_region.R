@@ -1,3 +1,13 @@
+# Plots of Gini import indexes
+#
+# Author: Javier Garcia Algarra
+#
+# Invocation: Rscript paint_ginis_region year
+#                    year : year to plot
+#
+# Example: Rscript paint_ginis_region_year 2011
+
+
 library(ggplot2)
 library(grid)
 library(gridExtra)
@@ -7,20 +17,19 @@ exit <- function() {
 }
 
 
-# args = commandArgs(trailingOnly=TRUE)
-# if (length(args)==0){
-#   print("Indicar región año1 y año 2")
-#   exit()
-# } else{
-#   region_filter <- as.numeric(args[1])
-#   year1 <- as.numeric(args[2])
-#   year2 <- as.numeric(args[3])
-#   mismoanyo = (year1 == year2)
-# }
+args = commandArgs(trailingOnly=TRUE)
 
-year1 = 2011
-year2 = 2011
-region_filter = "ALL"
+if (length(args)==0){
+  print("Syntax: Rscript paint_ginis_region.R year")
+  exit()
+} else{
+  year <- as.numeric(args[1])
+}
+
+#year= 2011
+imprfrac = 2
+
+region_filter = "ALL"   # Originally intented to plot just one region, now plots all
 
 paint_ginis_year <- function(datos)
 {
@@ -75,10 +84,27 @@ for (i in 1:nrow(Ginis)){
 }
 Ginis$Method <- as.factor(Ginis$Method)
 
-# Filter by command line args conditions
-Ginis <- Ginis[Ginis$Year %in% c(year1,year2),]
 
-boxplot(Gini_export ~ Method, data = Ginis)
+Ginis_WORLD <- Ginis[Ginis$Region=="WORLD",]
+Ginis_WORLD <- Ginis_WORLD[Ginis_WORLD$Method %in% c("SYNTH","EMPIRICAL"),]
+Ginis_WORLD <- Ginis_WORLD[Ginis_WORLD$Method %in% c("SYNTH","EMPIRICAL"),]
+Ginis_WORLD <- unique(Ginis_WORLD)
+Ginis_WORLD <- Ginis_WORLD[Ginis_WORLD$Experiment != "RAW",]
+
+# Boxplot of empirical vs synthetic networks by year
+pallyears <- ggplot(Ginis_WORLD, aes(x = as.factor(Year), y = Gini_import, 
+                                    color = Method)) +
+  geom_boxplot(alpha=0.7) + # ggtitle(paste0(year," improved fraction ",imprfrac,"%")) +
+  ylim(c(0.5,1))+ xlab("Year")+ylab("Importers Gini")+
+  theme_bw() +
+  theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
+        text = element_text(size = 12),
+        axis.title = element_text(face="bold"),
+        axis.text.x=element_text(size = 11))
+
+# Filter by command line args conditions
+Ginis <- Ginis[Ginis$Year %in% c(year),]
+
 p10 <- ggplot(Ginis, aes(x = Year, y = Gini_import, fill = Method)) +
   geom_boxplot(alpha=0.7) +
   scale_x_discrete(name = "Year") + ylim(c(0.5,1))+
@@ -105,7 +131,6 @@ mean_add <- mean_vals[mean_vals$TradeBoost==0,]
 mean_add$Scope = "REGIONAL"
 mean_vals <- rbind(mean_vals,mean_add)
 
-imprfrac = 2
 Ginis_Sel$YF <- paste(Ginis_Sel$Year,Ginis_Sel$ImprovedFraction)
 Ginis_Regions <- Ginis_Sel # Data frame with all regional data
 
@@ -119,12 +144,12 @@ if (region_filter %in% c("ALL","WORLD"))  {
 
 # Selection of improved fraction
 Ginis_Disp = Ginis_Sel[(Ginis_Sel$ImprovedFraction == imprfrac) |(Ginis_Sel$ImprovedFraction == 0) ,]
-# Scatter plot, only for selected region values, only year1
+# Scatter plot, only for selected region values, only year
 p11 <- ggplot(Ginis_Disp, aes(x = as.numeric(TradeBoost), y = Gini_import, fill = Scope)) +
   geom_jitter(alpha=0.3,shape=21,size=2,color="transparent",width=1) +
   geom_line(data=mean_vals,aes(x = as.numeric(TradeBoost), y = Gini_import, color= Scope),size=1,alpha=0.7)+
   ylim(c(0.5,1))+ xlab("Boost percentage")+ylab("Importers Gini")+#facet_wrap(~YF)+
-  ggtitle(paste0(year1," improved fraction ",imprfrac,"%")) +
+  ggtitle(paste0(year," improved fraction ",imprfrac,"%")) +
   theme_bw() +
   theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
         text = element_text(size = 12),
@@ -133,10 +158,10 @@ p11 <- ggplot(Ginis_Disp, aes(x = as.numeric(TradeBoost), y = Gini_import, fill 
 
 Ginis_DispR = Ginis_Regions[(Ginis_Regions$ImprovedFraction == imprfrac) |(Ginis_Regions
                                                                            $ImprovedFraction == 0) ,]
-# Boxplots, only for all regions, only year1
+# Boxplots, only for all regions, only year
 pregions <- ggplot(Ginis_DispR, aes(x = as.factor(TradeBoost), y = Gini_import, 
                                     color = Scope)) +
-  geom_boxplot(alpha=0.7) + ggtitle(paste0(year1," improved fraction ",imprfrac,"%")) +
+  geom_boxplot(alpha=0.7) + ggtitle(paste0(year," improved fraction ",imprfrac,"%")) +
   ylim(c(0.2,1))+ xlab("Boost percentage")+ylab("Importers Gini")+facet_wrap(~Region)+
   theme_bw() +
   theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
@@ -183,7 +208,7 @@ Ginis_Box$ImprovedFraction <- paste("Improved Fraction",Ginis_Box$ImprovedFracti
 p13 <- ggplot(Ginis_Box, aes(x = as.factor(TradeBoost), y = Gini_import, color = Scope)) +
   geom_boxplot(alpha=0.8) + #geom_jitter(width=1.5) +
   ylim(c(0.5,1))+ xlab("Boost percentage")+facet_wrap(~ImprovedFraction)+
-  labs(title=paste(year1,lRegion))+
+  labs(title=paste(year,lRegion))+
   theme_bw() +
   theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
         text = element_text(size = 12),
@@ -192,26 +217,32 @@ p13 <- ggplot(Ginis_Box, aes(x = as.factor(TradeBoost), y = Gini_import, color =
 
 
 ppi <- 300
-fsal <- paste0("../figures/Ginis_evol_regions_",year1,"_",year2,"_",lRegion,".png")
+fsal <- paste0("../figures/Ginis_evol_regions_",year,"_",lRegion,".png")
 png(fsal, width=10*ppi, height=6*ppi, res=ppi)
 print(p12)
 dev.off()
 
 ppi <- 300
-fsal <- paste0("../figures/Ginis_dispersion_WORLD_",year1,"_",year2,"_",lRegion,".png")
+fsal <- paste0("../figures/Ginis_dispersion_WORLD_",year,"_",lRegion,".png")
 png(fsal, width=10*ppi, height=6*ppi, res=ppi)
 print(p11)
 dev.off()
 
 ppi <- 300
-fsal <- paste0("../figures/Ginis_BOX_WBREGIONS_regions_",year1,"_",year2,"_",lRegion,".png")
+fsal <- paste0("../figures/Ginis_BOX_WBREGIONS_regions_",year,"_",lRegion,".png")
 png(fsal, width=10*ppi, height=6*ppi, res=ppi)
 print(pregions)
 dev.off()
 
 
 ppi <- 300
-fsal <- paste0("../figures/Ginis_BoxPlots_regions_",year1,"_",year2,"_",lRegion,".png")
+fsal <- paste0("../figures/Ginis_BoxPlots_regions_",year,"_",lRegion,".png")
 png(fsal, width=10*ppi, height=4*ppi, res=ppi)
 print(p13)
+dev.off()
+
+ppi <- 300
+fsal <- paste0("../figures/Ginis_BoxPlots_ALLYEARS.png")
+png(fsal, width=8*ppi, height=6*ppi, res=ppi)
+print(pallyears)
 dev.off()
