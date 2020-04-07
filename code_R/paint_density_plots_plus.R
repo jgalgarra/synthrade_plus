@@ -2,17 +2,9 @@
 #
 # Author: Javier Garcia Algarra
 #
-# Invocation: Rscript paint_density_plots iniseq finseq KSarg HOriginal
-#                    iniseq : Initial year
-#                    finseq : Final year
-#                    KSarg: 1 Find best fitting synthetic experiment   0 Experiment 1
-#                    HOriginal: FS Show Filtered and Synthetic (default)
-#                               FOS (Filtered, Original, Synthetic)
-#                               OS (Original, Synthetic)
-#                               O  (Only Original)
-#                               F  (Only Filtered)
+# Invocation: Rscript paint_density_plots_plus year
 #
-# Example: Rscript paint_density_plots 1962 1976 1 FOS
+# Example: Rscript paint_density_plots_plus 2005
 
 rm(list=ls())
 library(grid)
@@ -25,39 +17,7 @@ source("parse_command_line_args.R")
 
 # Third argument. If set to TRUE searches the best GOF in BestKS.txt
 # else chooses experiment number 1
-sbestKS <- TRUE 
-
-KSarg <- as.character(args[4])
-
-
-if (!is.na(KSarg)){
-  if (KSarg == 0)
-    sbestKS <- FALSE
-}
-
-# Fourth command argument allows to hide original densities
-# HOriginal <- as.character(args[4])
-# if (is.na(HOriginal)){
-#   SFilt <- TRUE
-#   SSynth <- TRUE
-#   sOrig <- FALSE
-#   HOstr <- "FS"
-# } else{
-#   HOstr <- ""
-#   if (grepl("F",HOriginal)){
-#     SFilt <- TRUE
-#     HOstr <- paste0(HOstr,"F")
-#   }
-#   if (grepl("O",HOriginal)){
-#     SOrig <- TRUE
-#     HOstr <- paste0(HOstr,"O")
-#   }
-#   if (grepl("S",HOriginal)){
-#     SOrig <- TRUE
-#     HOstr <- paste0(HOstr,"S")
-#   }
-# 
-# }
+sbestKS <- FALSE 
 
 
 #Our transformation function
@@ -127,18 +87,24 @@ PaintBoxPlot <- function(datos,titletext,xlabel)
   return(p)
 }
 
-source("parse_command_line_args.R")
+args = commandArgs(trailingOnly=TRUE)
 
-ini_seq <- 2017
-end_seq <- 2017
+if (length(args)==0){
+  print("Syntax: Rscript paint_ginis_region.R year")
+  exit()
+} else{
+  year <- as.numeric(args[1])
+}
+
+ini_seq <- year
+end_seq <- year
 
 
 ImprovedFraction <- 2
 BoostPercentage <- c(50,200)
 Scope <- "GLOBAL"
-ginis_detail <- read.csv("../results/ginis_detail.txt", sep=";")
-mean_vals_year <- read.csv("../results/ginis_means.txt", sep=";")
-
+ginis_detail <- read.csv("../results/ginis_detail_regions.txt", sep=";")
+ginis_detail <- ginis_detail[ginis_detail$Region == "WORLD",]
 
 anyos <- seq(ini_seq,end_seq)
 
@@ -152,6 +118,7 @@ for (year in anyos){
     posbest <- 1
   if (length(posbest)== 0)
     posbest <- 1
+  mean_vals_year <- read.csv(paste0("../results/ginis_means_regions_",year,".txt"), sep=";")
   file_name <- paste0("RedAdyCom",year,"_FILT")
   file_orig <- paste0("RedAdyCom",year)
   experiment_files <- Sys.glob(paste0("../results/",file_name,"_W_",posbest,".txt"))
@@ -171,10 +138,10 @@ for (year in anyos){
   
   for (BP in BoostPercentage){
     selgini <- ginis_detail[(ginis_detail$Method == method) & (ginis_detail$Year == year),]
-    mean_val_gini <- mean_vals_year[(mean_vals_year$Year == year) &
+    mean_val_gini <- mean_vals_year[ #(mean_vals_year$Year == year) &
                                       (mean_vals_year$Scope == Scope) &
-                                      (mean_vals_year$TradeBoost == BP) &
-                                      (mean_vals_year$ImprovedFraction == ImprovedFraction),]$Gini_import
+                                      (mean_vals_year$TradeBoost == BP) ,]$Gini_import
+                                      #(mean_vals_year$ImprovedFraction == ImprovedFraction),]$Gini_import
     diffgini <- abs(selgini$Gini_import - mean_val_gini)
     meanexper <- selgini[which(diffgini==min(diffgini)),][1,]
     posmeangini <- ginis_detail[(ginis_detail$Year==year) & 
@@ -224,10 +191,8 @@ for (year in anyos){
   
   for (BP in BoostPercentage){
     selgini <- ginis_detail[(ginis_detail$Method == method) & (ginis_detail$Year == year),]
-    mean_val_gini <- mean_vals_year[(mean_vals_year$Year == year) &
-                                      (mean_vals_year$Scope == Scope) &
-                                      (mean_vals_year$TradeBoost == BP) &
-                                      (mean_vals_year$ImprovedFraction == ImprovedFraction),]$Gini_import
+    mean_val_gini <- mean_vals_year[ (mean_vals_year$Scope == Scope) &
+                                     (mean_vals_year$TradeBoost == BP) ,]$Gini_import
     diffgini <- abs(selgini$Gini_import - mean_val_gini)
     meanexper <- selgini[which(diffgini==min(diffgini)),][1,]
     posmeangini <- ginis_detail[(ginis_detail$Year==year) & 

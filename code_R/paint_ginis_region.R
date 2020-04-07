@@ -102,6 +102,7 @@ pallyears <- ggplot(Ginis_WORLD, aes(x = as.factor(Year), y = Gini_import,
         axis.title = element_text(face="bold"),
         axis.text.x=element_text(size = 11))
 
+Ginis_ALL <- Ginis
 # Filter by command line args conditions
 Ginis <- Ginis[Ginis$Year %in% c(year),]
 
@@ -196,8 +197,8 @@ for (k in unique(mean_vals_year$Year))
 mean_vals_year <- mean_vals_year[mean_vals_year$ImprovedFraction!=0,]
 mean_vals_year$Policy <- paste0(mean_vals_year$Scope," ",mean_vals_year$ImprovedFraction,"%")
 
-write.table(Ginis,"../results/ginis_detail_regions.txt",sep=";",row.names = FALSE)
-write.table(mean_vals_year,"../results/ginis_means_regions.txt",sep=";",row.names = FALSE)
+write.table(Ginis_ALL,"../results/ginis_detail_regions.txt",sep=";",row.names = FALSE)
+write.table(mean_vals,paste0("../results/ginis_means_regions_",year,".txt"),sep=";",row.names = FALSE)
 
 # Plot of Gini import means as a function of boost and improved fraction
 p12 <- paint_ginis_year(mean_vals_year)
