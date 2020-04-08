@@ -29,7 +29,7 @@ PaintDensPlot <- function(datos,titletext,xlabel,legendp="bottom")
                            data=datos, position = "identity", adjust= 2)+
     xlab(paste(titletext,xlabel))+ylab("Density\n") + scale_fill_manual(values=c("blue","green4","red")) +
     scale_color_manual(values=c("blue","green4","red"))
-    if (xlabel == "Degree")
+    if (grepl("Degree",xlabel))
       p <- p + scale_x_log10(limits=c(0.1,1000))
     else
       p <- p + scale_x_log10(limits=c(10^-7,1))
@@ -47,12 +47,12 @@ PaintDensPlot <- function(datos,titletext,xlabel,legendp="bottom")
           panel.grid.major.x = element_blank(), 
           legend.title = element_blank(),
           legend.position = legendp,
-          legend.text = lt, # element_text(size=10, face="bold"),
+          legend.text = lt, 
           axis.line = element_line(colour = "black"),
           plot.title = element_text(lineheight=1.5, face="bold"),
-          axis.text = element_text(face="bold", size=13),
-          axis.title.x = element_text(face="bold", size=13),
-          axis.title.y  = element_text(face="bold", size=13) )
+          axis.text = element_text(face="bold", size=12),
+          axis.title.x = element_text(face="bold", size=12),
+          axis.title.y  = element_text(face="bold", size=12) )
     if (legendp == "top")
       p <- p + theme(legend.key = element_rect(size = 6, fill = "white", colour = "white"), legend.key.size = unit(0, "cm"))
     
@@ -79,10 +79,10 @@ PaintBoxPlot <- function(datos,titletext,xlabel)
           legend.position = "none",
           legend.text = element_text(size=12, face="bold"),
           axis.line = element_line(colour = "black"),
-          plot.title = element_text(lineheight=.8, face="bold"),
+          plot.title = element_text(lineheight=1.5, face="bold"),
           axis.text = element_text(face="bold", size=11),
-          axis.title.x = element_text(face="bold", size=13),
-          axis.title.y  = element_text(face="bold", size=13) )
+          axis.title.x = element_text(face="bold", size=12),
+          axis.title.y  = element_text(face="bold", size=12) )
   
   return(p)
 }
@@ -230,7 +230,7 @@ for (year in anyos){
   
   
   
-  deg <- PaintDensPlot(hm_all_deg,"","Degree",legendp = "top")
+  deg <- PaintDensPlot(hm_all_deg,"","Degree\n",legendp = "top")
   weight <- PaintDensPlot(hm_all_weight,"","Normalized strength", legendp = "bottom")
   ppi <- 300
   fsal <- paste0("../figures/densities/Density_DegStr_",year,"_",ImprovedFraction,"_",Scope,".png")
@@ -239,7 +239,7 @@ for (year in anyos){
   dev.off()
   
   
-  bdeg <- PaintBoxPlot(hm_all_deg,"","Degree")
+  bdeg <- PaintBoxPlot(hm_all_deg,"","Degree\n")
   bweight <- PaintBoxPlot(hm_all_weight,"","Normalized strength")
   ppi <- 300
   fsal <- paste0("../figures/densities/BoxPlot_DegStr_",year,"_",ImprovedFraction,"_",Scope,".png")
