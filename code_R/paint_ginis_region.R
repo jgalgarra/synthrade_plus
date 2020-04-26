@@ -20,13 +20,14 @@ exit <- function() {
 args = commandArgs(trailingOnly=TRUE)
 
 if (length(args)==0){
-  print("Syntax: Rscript paint_ginis_region.R year")
-  exit()
+  #print("Syntax: Rscript paint_ginis_region.R year")
+  #exit()
+  year= 2011
 } else{
   year <- as.numeric(args[1])
 }
 
-#year= 2011
+
 imprfrac = 2
 
 region_filter = "ALL"   # Originally intented to plot just one region, now plots all
@@ -92,15 +93,26 @@ Ginis_WORLD <- unique(Ginis_WORLD)
 Ginis_WORLD <- Ginis_WORLD[Ginis_WORLD$Experiment != "RAW",]
 
 # Boxplot of empirical vs synthetic networks by year
-pallyears <- ggplot(Ginis_WORLD, aes(x = as.factor(Year), y = Gini_import, 
+pallyears_imp <- ggplot(Ginis_WORLD, aes(x = as.factor(Year), y = Gini_import, 
                                     color = Method)) +
   geom_boxplot(alpha=0.7) + # ggtitle(paste0(year," improved fraction ",imprfrac,"%")) +
-  ylim(c(0.5,1))+ xlab("Year")+ylab("Importers Gini")+
+  ylim(c(0.5,1))+ xlab("Year")+ylab("Importers Gini index")+
   theme_bw() +
   theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
         text = element_text(size = 12),
         axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11))
+        axis.text.x=element_text(size = 10,angle = 45,hjust=1))
+
+pallyears_expt <- ggplot(Ginis_WORLD, aes(x = as.factor(Year), y = Gini_export, 
+                                         color = Method)) +
+  geom_boxplot(alpha=0.7) + # ggtitle(paste0(year," improved fraction ",imprfrac,"%")) +
+  ylim(c(0.5,1))+ xlab("Year")+ylab("Exporters Gini index")+
+  theme_bw() +
+  theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
+        text = element_text(size = 12),
+        axis.title = element_text(face="bold"),
+        axis.text.x=element_text(size = 10,angle = 45,hjust=1))
+
 
 Ginis_ALL <- Ginis
 # Filter by command line args conditions
@@ -216,6 +228,13 @@ p13 <- ggplot(Ginis_Box, aes(x = as.factor(TradeBoost), y = Gini_import, color =
         axis.title = element_text(face="bold"),
         axis.text.x=element_text(size = 11)) 
 
+
+
+ppi <- 300
+fsal <- paste0("../figures/Ginis_Empirical_vs_Synth_ALLYEARS.png")
+png(fsal, width=10*ppi, height=4*ppi, res=ppi)
+grid.arrange(pallyears_expt,pallyears_imp, ncol=2, nrow=1,top="" )
+dev.off()
 
 ppi <- 300
 fsal <- paste0("../figures/Ginis_evol_regions_",year,"_",lRegion,".png")
