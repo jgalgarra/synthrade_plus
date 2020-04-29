@@ -20,9 +20,8 @@ exit <- function() {
 args = commandArgs(trailingOnly=TRUE)
 
 if (length(args)==0){
-  #print("Syntax: Rscript paint_ginis_region.R year")
-  #exit()
-  year= 2011
+  print("Syntax: Rscript paint_ginis_region.R year")
+  exit()
 } else{
   year <- as.numeric(args[1])
 }
@@ -261,8 +260,8 @@ png(fsal, width=10*ppi, height=4*ppi, res=ppi)
 print(p13)
 dev.off()
 
-ppi <- 300
-fsal <- paste0("../figures/Ginis_BoxPlots_ALLYEARS.png")
-png(fsal, width=8*ppi, height=6*ppi, res=ppi)
-print(pallyears)
-dev.off()
+# ppi <- 300
+# fsal <- paste0("../figures/Ginis_BoxPlots_ALLYEARS.png")
+# png(fsal, width=8*ppi, height=6*ppi, res=ppi)
+# print(pallyears)
+# dev.off()

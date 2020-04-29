@@ -3,12 +3,13 @@
 # It shows 
 #        1. Density matrixes of empirical, synthetic, BOOST 50 2% and BOOST 200 2%
 #        2. Probability matrixes of synthetic, BOOST 50 2% and BOOST 200 2% in a row
+#        3. Weight and probability matrixes of synthetic, BOOST 50 2% and BOOST 200 2% in a row
 #    
 # Author: Javier Garcia Algarra
 #
 # Invocation: Rscript paint_density_plots_plus year
 #
-# Example: Rscript paint_density_plots_plus 2005
+# Example: Rscript paint_matrix_plus.R 2005
 
 library(grid)
 library(gridExtra)
@@ -142,5 +143,10 @@ for (file_name in files)
   fsal <- paste0("../figures/matrixes/PROB_",file_name,"_nexper_",numexper,"_IntMatrix.png")
   png(fsal, width=14*ppi, height=4*ppi, res=ppi)
   grid.arrange(m_prob_synth, m_prob_synthimpr_matrix_50,m_prob_synthimpr_matrix_200, ncol=3)
+  dev.off()
+  
+  fsal <- paste0("../figures/matrixes/SANDPROB3_",file_name,"_nexper_",numexper,"_IntMatrix.png")
+  png(fsal, width=14*ppi, height=8*ppi, res=ppi)
+  grid.arrange(m_synth,m_synthimpr_matrix_50,m_synthimpr_matrix_200,m_prob_synth, m_prob_synthimpr_matrix_50,m_prob_synthimpr_matrix_200, nrow=2,ncol=3)
   dev.off()
 }

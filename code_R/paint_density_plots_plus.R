@@ -96,6 +96,7 @@ if (length(args)==0){
   year <- as.numeric(args[1])
 }
 
+
 ini_seq <- year
 end_seq <- year
 
