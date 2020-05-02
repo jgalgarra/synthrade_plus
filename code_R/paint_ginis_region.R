@@ -5,7 +5,7 @@
 # Invocation: Rscript paint_ginis_region year
 #                    year : year to plot
 #
-# Example: Rscript paint_ginis_region_year 2011
+# Example: Rscript paint_ginis_region.R 2011
 
 
 library(ggplot2)
@@ -37,14 +37,15 @@ paint_ginis_year <- function(datos)
   pres <- ggplot(ginis_year, aes(x = as.numeric(TradeBoost), y = Gini_import, 
                                  color = Policy)) +
     geom_line(size=0.7,alpha=0.7)+geom_point(size=2,alpha=0.7)+
-    ylim(c(0.5,1))+ xlab("Boost percentage") + 
+    ylim(c(0.5,1))+ xlab("Boost percentage") + ylab("Importers Gini") +
     facet_wrap(~Year,scales="free_x")+
     theme_bw() +
     theme(plot.title = element_text(size = 14,  face = "bold"),
           legend.position = "bottom",
           text = element_text(size = 12),
           axis.title = element_text(face="bold"),
-          axis.text.x=element_text(size = 11)) 
+          axis.text.x=element_text(size = 12),
+          axis.text.y=element_text(size = 12)) 
   return(pres)
   
 }
@@ -91,9 +92,18 @@ Ginis_WORLD <- Ginis_WORLD[Ginis_WORLD$Method %in% c("SYNTH","EMPIRICAL"),]
 Ginis_WORLD <- unique(Ginis_WORLD)
 Ginis_WORLD <- Ginis_WORLD[Ginis_WORLD$Experiment != "RAW",]
 
+mean_imp=aggregate(Ginis_WORLD$Gini_import , by=list(Ginis_WORLD$Year,Ginis_WORLD$Method), mean)
+mean_imp$Distribution = "Importer"
+mean_exp=aggregate(Ginis_WORLD$Gini_export , by=list(Ginis_WORLD$Year,Ginis_WORLD$Method), mean)
+mean_exp$Distribution = "Exporter"
+ginis_mean_ALL <- rbind(mean_imp,mean_exp)
+names(ginis_mean_ALL) <- c("Year","Type","Gini","Distribution")
+
+
+write.table(ginis_mean_ALL,"../results/ginis_WORLD_ALL_YEARS.txt",sep=";",row.names = FALSE)
 # Boxplot of empirical vs synthetic networks by year
 pallyears_imp <- ggplot(Ginis_WORLD, aes(x = as.factor(Year), y = Gini_import, 
-                                    color = Method)) +
+                                         color = Method)) +
   geom_boxplot(alpha=0.7) + # ggtitle(paste0(year," improved fraction ",imprfrac,"%")) +
   ylim(c(0.5,1))+ xlab("Year")+ylab("Importers Gini index")+
   theme_bw() +
@@ -103,7 +113,7 @@ pallyears_imp <- ggplot(Ginis_WORLD, aes(x = as.factor(Year), y = Gini_import,
         axis.text.x=element_text(size = 10,angle = 45,hjust=1))
 
 pallyears_expt <- ggplot(Ginis_WORLD, aes(x = as.factor(Year), y = Gini_export, 
-                                         color = Method)) +
+                                          color = Method)) +
   geom_boxplot(alpha=0.7) + # ggtitle(paste0(year," improved fraction ",imprfrac,"%")) +
   ylim(c(0.5,1))+ xlab("Year")+ylab("Exporters Gini index")+
   theme_bw() +
@@ -219,12 +229,13 @@ Ginis_Box <- Ginis_Sel[Ginis_Sel$ImprovedFraction>0,]
 Ginis_Box$ImprovedFraction <- paste("Improved Fraction",Ginis_Box$ImprovedFraction,"%")
 p13 <- ggplot(Ginis_Box, aes(x = as.factor(TradeBoost), y = Gini_import, color = Scope)) +
   geom_boxplot(alpha=0.8) + #geom_jitter(width=1.5) +
-  ylim(c(0.5,1))+ xlab("Boost percentage")+facet_wrap(~ImprovedFraction)+
+  ylim(c(0.5,1))+ xlab("Boost percentage")+ylab("Importers Gini")+facet_wrap(~ImprovedFraction)+
   labs(title=paste(year,lRegion))+
   theme_bw() +
   theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
         text = element_text(size = 12),
         axis.title = element_text(face="bold"),
+        legend.position = "bottom",
         axis.text.x=element_text(size = 11)) 
 
 
@@ -259,9 +270,3 @@ fsal <- paste0("../figures/Ginis_BoxPlots_regions_",year,"_",lRegion,".png")
 png(fsal, width=10*ppi, height=4*ppi, res=ppi)
 print(p13)
 dev.off()
-
-# ppi <- 300
-# fsal <- paste0("../figures/Ginis_BoxPlots_ALLYEARS.png")
-# png(fsal, width=8*ppi, height=6*ppi, res=ppi)
-# print(pallyears)
-# dev.off()
