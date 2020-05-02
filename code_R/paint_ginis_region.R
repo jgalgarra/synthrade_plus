@@ -104,7 +104,7 @@ write.table(ginis_mean_ALL,"../results/ginis_WORLD_ALL_YEARS.txt",sep=";",row.na
 # Boxplot of empirical vs synthetic networks by year
 pallyears_imp <- ggplot(Ginis_WORLD, aes(x = as.factor(Year), y = Gini_import, 
                                          color = Method)) +
-  geom_boxplot(alpha=0.7) + # ggtitle(paste0(year," improved fraction ",imprfrac,"%")) +
+  geom_boxplot(alpha=0.7) + 
   ylim(c(0.5,1))+ xlab("Year")+ylab("Importers Gini index")+
   theme_bw() +
   theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
@@ -219,6 +219,7 @@ mean_vals_year <- mean_vals_year[mean_vals_year$ImprovedFraction!=0,]
 mean_vals_year$Policy <- paste0(mean_vals_year$Scope," ",mean_vals_year$ImprovedFraction,"%")
 
 write.table(Ginis_ALL,"../results/ginis_detail_regions.txt",sep=";",row.names = FALSE)
+# Gini indexes mean values for 2% of improved trade
 write.table(mean_vals,paste0("../results/ginis_means_regions_",year,".txt"),sep=";",row.names = FALSE)
 
 # Plot of Gini import means as a function of boost and improved fraction
