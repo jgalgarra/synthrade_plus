@@ -3,7 +3,7 @@
 # Author: Javier Garcia Algarra
 #
 # This is the main script of the synthetic trade network simulator
-# Invocation Rscript synthetic_model iniseq finseq numexper
+# Invocation Rscript synthrade_plus.R
 #                    iniseq : Initial year
 #                    finseq : Final year
 #                    numexper: Number of experiments
@@ -42,11 +42,9 @@ ReadMatrix <- function(year){
   regionsbyrow <- namesbyrow
   regionsbycol <- namesbycol
   for (i in 1:length(namesbyrow)){
-    #print(namesbyrow[i])
     regionsbyrow[i] = as.character(regions_file[regions_file$Country == namesbyrow[i],]$Region)
   }
   for (i in 1:length(namesbycol)){
-    #print(namesbycol[i])
     regionsbycol[i] = as.character(regions_file[regions_file$Country == namesbycol[i],]$Region)
   }
   return(list(clean_matrix,data.frame("Country"=namesbyrow,"Region" = regionsbyrow),
@@ -275,7 +273,6 @@ if (length(args)==0){
   if (str_length(fbal) > 0)
     cutoff <- as.numeric(args[5])/100                   # Fraction of probability without boost, 
   boost <- as.numeric(args[6])/100                    # Trade boost for those countries
-  print(paste("length(args[7])",str_length(args[7]),is.na(str_length(args[7]))))
   if (is.na(str_length(args[7]))){
     regional <- FALSE
   } else{ 

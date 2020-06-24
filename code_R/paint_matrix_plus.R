@@ -7,7 +7,7 @@
 #    
 # Author: Javier Garcia Algarra
 #
-# Invocation: Rscript paint_density_plots_plus year
+# Invocation: Rscript paint_matrix_plus year
 #
 # Example: Rscript paint_matrix_plus.R 2005
 

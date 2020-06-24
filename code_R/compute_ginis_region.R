@@ -2,7 +2,7 @@
 #
 # Author: Javier Garcia Algarra
 #
-# Invocation: Rscript GinisRegions iniseq finseq 
+# Invocation: Rscript compute_ginis_region.R iniseq finseq 
 
 library(nortest)
 library(ineq)
