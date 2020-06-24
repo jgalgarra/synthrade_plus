@@ -24,6 +24,7 @@ git bash installed
 ### Reproducibility
 
 - Download or Clone the repository
+- Extract `results_synthrade.rar` to a folder `results` under the repository root folder
 - Run scripts from command line with Rscript
 
 - To create matrixes from raw data you should read the documentation of Synthrade
