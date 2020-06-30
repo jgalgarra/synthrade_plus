@@ -62,7 +62,7 @@ paint_int_matrix <- function(mq,titulo="",maximo=1)
                                  legend.title = element_text(face="bold", size=9),
                                  axis.ticks = element_blank(),
                                  panel.border = element_blank(),
-                                 plot.title = element_text(hjust = 0.5))
+                                 plot.title = element_text(size = 14,  face = "bold", hjust = -0.1))
   return(zp1)
 }
 
@@ -132,7 +132,7 @@ for (file_name in files)
   m_prob_synthimpr_matrix_200 <- paint_int_matrix(hm_synthimpr_matrix_200_prob,titulo="log(P)\nBOOST 200")
   
   
-  ppi <- 300  
+  ppi <- 300
   dir.create("../figures/", showWarnings = FALSE)
   dir.create("../figures/matrixes", showWarnings = FALSE)
   fsal <- paste0("../figures/matrixes/STRENGTH_",file_name,"_nexper_",numexper,"_IntMatrix.png")
@@ -149,4 +149,17 @@ for (file_name in files)
   png(fsal, width=14*ppi, height=8*ppi, res=ppi)
   grid.arrange(m_synth,m_synthimpr_matrix_50,m_synthimpr_matrix_200,m_prob_synth, m_prob_synthimpr_matrix_50,m_prob_synthimpr_matrix_200, nrow=2,ncol=3)
   dev.off()
+  
+  ppi <- 144
+  fsal <- paste0("../figures/matrixes/SANDPROB3_",file_name,"_nexper_",numexper,"_IntMatrix.eps")
+  cairo_ps(filename = fsal,
+           width = 14, height = 8, pointsize = 4,
+           fallback_resolution = ppi)
+  g <- grid.arrange(m_synth+ggtitle("a"),m_synthimpr_matrix_50+ggtitle("b"),
+                    m_synthimpr_matrix_200+ggtitle("c"),m_prob_synth+ggtitle("d"), 
+                    m_prob_synthimpr_matrix_50+ggtitle("e"),m_prob_synthimpr_matrix_200+ggtitle("f"),
+                    nrow=2,ncol=3)
+  print(g)
+  invisible(dev.off())
+  
 }

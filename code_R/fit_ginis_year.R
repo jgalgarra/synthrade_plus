@@ -69,3 +69,10 @@ fsal <- paste0("../figures/Ginis_predicted_",year,".png")
 png(fsal, width=8*ppi, height=4*ppi, res=ppi)
 print(p)
 dev.off()
+
+fsal <- paste0("../figures/Ginis_predicted_",year,".eps")
+cairo_ps(filename = fsal,
+         width = 8, height = 4, pointsize = 12,
+         fallback_resolution = ppi)
+print(p)
+invisible(dev.off())

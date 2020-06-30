@@ -3,9 +3,9 @@
 # Author: Javier Garcia Algarra
 #
 # Invocation: Rscript paint_ginis_region year
-#                    year : year to plot
+#           
 #
-# Example: Rscript paint_ginis_region.R 2011
+# Example: Rscript paint_ginis_region.R 2107
 
 
 library(ggplot2)
@@ -25,6 +25,7 @@ if (length(args)==0){
 } else{
   year <- as.numeric(args[1])
 }
+
 
 
 imprfrac = 2
@@ -107,7 +108,7 @@ pallyears_imp <- ggplot(Ginis_WORLD, aes(x = as.factor(Year), y = Gini_import,
   geom_boxplot(alpha=0.7) + 
   ylim(c(0.5,1))+ xlab("Year")+ylab("Importers Gini index")+
   theme_bw() +
-  theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
+  theme(plot.title = element_text(size = 20,  face = "bold", hjust = -0.1),
         text = element_text(size = 12),
         axis.title = element_text(face="bold"),
         axis.text.x=element_text(size = 10,angle = 45,hjust=1))
@@ -117,7 +118,7 @@ pallyears_expt <- ggplot(Ginis_WORLD, aes(x = as.factor(Year), y = Gini_export,
   geom_boxplot(alpha=0.7) + # ggtitle(paste0(year," improved fraction ",imprfrac,"%")) +
   ylim(c(0.5,1))+ xlab("Year")+ylab("Exporters Gini index")+
   theme_bw() +
-  theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
+  theme(plot.title = element_text(size = 20,  face = "bold", hjust = -0.1),
         text = element_text(size = 12),
         axis.title = element_text(face="bold"),
         axis.text.x=element_text(size = 10,angle = 45,hjust=1))
@@ -171,7 +172,6 @@ p11 <- ggplot(Ginis_Disp, aes(x = as.numeric(TradeBoost), y = Gini_import, fill 
   geom_jitter(alpha=0.3,shape=21,size=2,color="transparent",width=1) +
   geom_line(data=mean_vals,aes(x = as.numeric(TradeBoost), y = Gini_import, color= Scope),size=1,alpha=0.7)+
   ylim(c(0.5,1))+ xlab("Boost percentage")+ylab("Importers Gini")+#facet_wrap(~YF)+
-  ggtitle(paste0(year," improved fraction ",imprfrac,"%")) +
   theme_bw() +
   theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
         text = element_text(size = 12),
@@ -181,15 +181,17 @@ p11 <- ggplot(Ginis_Disp, aes(x = as.numeric(TradeBoost), y = Gini_import, fill 
 Ginis_DispR = Ginis_Regions[(Ginis_Regions$ImprovedFraction == imprfrac) |(Ginis_Regions
                                                                            $ImprovedFraction == 0) ,]
 # Boxplots, only for all regions, only year
-pregions <- ggplot(Ginis_DispR, aes(x = as.factor(TradeBoost), y = Gini_import, 
+pregioneps <- ggplot(Ginis_DispR, aes(x = as.factor(TradeBoost), y = Gini_import, 
                                     color = Scope)) +
-  geom_boxplot(alpha=0.7) + ggtitle(paste0(year," improved fraction ",imprfrac,"%")) +
+  geom_boxplot(alpha=0.7) +
   ylim(c(0.2,1))+ xlab("Boost percentage")+ylab("Importers Gini")+facet_wrap(~Region)+
   theme_bw() +
   theme(plot.title = element_text(size = 14,  face = "bold", hjust = 0.5),
         text = element_text(size = 12),
+        legend.position = "top",
         axis.title = element_text(face="bold"),
         axis.text.x=element_text(size = 11)) 
+pregions <- pregioneps + ggtitle(paste0(year," improved fraction ",imprfrac,"%"))
 
 mean_vals_year=aggregate(Ginis_Sel$Gini_import , 
                          by=list(Ginis_Sel$Year,Ginis_Sel$TradeBoost,
@@ -240,34 +242,58 @@ p13 <- ggplot(Ginis_Box, aes(x = as.factor(TradeBoost), y = Gini_import, color =
         axis.text.x=element_text(size = 11)) 
 
 
-
 ppi <- 300
 fsal <- paste0("../figures/Ginis_Empirical_vs_Synth_ALLYEARS.png")
 png(fsal, width=10*ppi, height=4*ppi, res=ppi)
 grid.arrange(pallyears_expt,pallyears_imp, ncol=2, nrow=1,top="" )
-dev.off()
+invisible(dev.off())
 
-ppi <- 300
+fsal <- paste0("../figures/Ginis_Empirical_vs_Synth_ALLYEARS.eps")
+pallyears_expt <- pallyears_expt+ggtitle("a")
+pallyears_imp <- pallyears_imp+ggtitle("b")
+r <- grid.arrange(pallyears_expt,pallyears_imp, ncol=2, nrow=1,top="" )
+ggsave(r, file=fsal, width=10, height=4)
+invisible(dev.off())
+
 fsal <- paste0("../figures/Ginis_evol_regions_",year,"_",lRegion,".png")
 png(fsal, width=10*ppi, height=6*ppi, res=ppi)
 print(p12)
-dev.off()
+invisible(dev.off())
 
-ppi <- 300
+fsal <- paste0("../figures/Ginis_evol_regions_",year,"_",lRegion,".eps")
+cairo_ps(filename = fsal,
+         width = 10, height = 6, pointsize = 12,
+         fallback_resolution = ppi)
+print(p12)
+invisible(dev.off())
+
+
 fsal <- paste0("../figures/Ginis_dispersion_WORLD_",year,"_",lRegion,".png")
 png(fsal, width=10*ppi, height=6*ppi, res=ppi)
+p11_title <- p11 + ggtitle(paste0(year," improved fraction ",imprfrac,"%"))
 print(p11)
-dev.off()
+invisible(dev.off())
 
-ppi <- 300
+
+fsal <- paste0("../figures/Ginis_dispersion_WORLD_",year,"_",lRegion,".eps")
+cairo_ps(filename = fsal,
+         width = 10, height = 6, pointsize = 12,
+         fallback_resolution = ppi)
+print(p11)
+invisible(dev.off())
+
 fsal <- paste0("../figures/Ginis_BOX_WBREGIONS_regions_",year,"_",lRegion,".png")
 png(fsal, width=10*ppi, height=6*ppi, res=ppi)
 print(pregions)
-dev.off()
+invisible(dev.off())
+
+fsal <- paste0("../figures/Ginis_BOX_WBREGIONS_regions_",year,"_",lRegion,".eps")
+ggsave(pregioneps, file=fsal, width=10, height=6)
+#invisible(dev.off())
 
 
 ppi <- 300
 fsal <- paste0("../figures/Ginis_BoxPlots_regions_",year,"_",lRegion,".png")
 png(fsal, width=10*ppi, height=4*ppi, res=ppi)
 print(p13)
-dev.off()
+invisible(dev.off())

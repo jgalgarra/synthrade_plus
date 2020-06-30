@@ -239,6 +239,14 @@ for (year in anyos){
   grid.arrange(deg,weight, ncol=1, nrow=2,top=as.character(year) )
   dev.off()
   
+  fsal <- paste0("../figures/densities/Density_DegStr_",year,"_",ImprovedFraction,"_",Scope,".eps")
+  cairo_ps(filename = fsal,
+           width = 10, height = 8, pointsize = 12,
+           fallback_resolution = ppi)
+  g <- grid.arrange(deg,weight, ncol=1, nrow=2,top="" )
+  print(g)
+  invisible(dev.off())
+  
   
   bdeg <- PaintBoxPlot(hm_all_deg,"","Degree\n")
   bweight <- PaintBoxPlot(hm_all_weight,"","Normalized strength")

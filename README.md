@@ -52,5 +52,5 @@ We provide 2 examples files (2017_REGIONAL, 2017_GLOBAL) with the set of command
 #### Plots
 - Run `Rscript paint_matrix_plus.R year`
 - Run `Rscript paint_density_plots_plus.R year` 
-- Run `Rscript paint_ginis.R year`
-- Run `Rscript paint_ginis_region.R year`
+- Run `Rscript paint_ginis.R`
+- Run `Rscript paint_ginis_region.R initial_year final_year`
