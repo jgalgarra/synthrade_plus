@@ -150,10 +150,12 @@ for (file_name in files)
   grid.arrange(m_synth,m_synthimpr_matrix_50,m_synthimpr_matrix_200,m_prob_synth, m_prob_synthimpr_matrix_50,m_prob_synthimpr_matrix_200, nrow=2,ncol=3)
   dev.off()
   
+  
+  
   ppi <- 144
   fsal <- paste0("../figures/matrixes/SANDPROB3_",file_name,"_nexper_",numexper,"_IntMatrix.eps")
   cairo_ps(filename = fsal,
-           width = 14, height = 8, pointsize = 4,
+           width = 7, height = 4, pointsize = 4,
            fallback_resolution = ppi)
   g <- grid.arrange(m_synth+ggtitle("a"),m_synthimpr_matrix_50+ggtitle("b"),
                     m_synthimpr_matrix_200+ggtitle("c"),m_prob_synth+ggtitle("d"), 
@@ -162,4 +164,6 @@ for (file_name in files)
   print(g)
   invisible(dev.off())
   
+  fsal <- paste0("../figures/matrixes/SANDPROB3_",file_name,"_nexper_",numexper,"_IntMatrix.pdf")
+  ggsave(fsal,g, width=7, height=4, units="in", scale=1)
 }

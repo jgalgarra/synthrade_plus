@@ -267,12 +267,19 @@ cairo_ps(filename = fsal,
 print(p12)
 invisible(dev.off())
 
+fsal <- paste0("../figures/Ginis_evol_regions_",year,"_",lRegion,".pdf")
+
+ggsave(fsal,p12, width=10, height=6, units="in", scale=1)
+
 
 fsal <- paste0("../figures/Ginis_dispersion_WORLD_",year,"_",lRegion,".png")
 png(fsal, width=10*ppi, height=6*ppi, res=ppi)
 p11_title <- p11 + ggtitle(paste0(year," improved fraction ",imprfrac,"%"))
 print(p11)
 invisible(dev.off())
+
+fsal <- paste0("../figures/Ginis_dispersion_WORLD_",year,"_",lRegion,".pdf")
+
 
 
 fsal <- paste0("../figures/Ginis_dispersion_WORLD_",year,"_",lRegion,".eps")
